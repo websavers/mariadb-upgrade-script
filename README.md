@@ -18,4 +18,12 @@ Integrated with Plesk tools to back up, upgrade DBs, and notify Plesk of version
  - Repaired syntax for major version IF comparison (req'd spaces within square brackets).
  - Added MariaDB/MySQL version checks. Switch case to allow for different options.
  - Added ability to upgrade from MariaDB 5.5 w/warning and user prompt.
- - Offers to make backup of DBs (and actually does if you tell it to)
+ - Offers to make backup of DBs (and actually does if you tell it to) *Untested as of Feb 21st*
+
+## Current Status:
+Tested and working OK except as (if) noted.
+
+## Complete test cases:
+- Default CentOS7 5.5 -> 10.2
+- MariaDB CentOS7 Repo 10.0 -> 10.2
+- MariaDB CentOS7 Repo 10.1 -> 10.2
