@@ -133,7 +133,8 @@ esac
 # Inform Plesk
 plesk sbin packagemng -sdf
 
-# Increase MySQL/MariaDB Packet Size and open file limit
+# Increase MySQL/MariaDB Packet Size and open file limit. Set log file to default logrotate location
+sed -i 's/^\[mysqld\]/&\nlog-error=\/var\/lib\/mysql\/mysqld.log/' /etc/my.cnf.d/server.cnf
 sed -i 's/^\[mysqld\]/&\nmax_allowed_packet=64M/' /etc/my.cnf.d/server.cnf
 sed -i 's/^\[mysqld\]/&\nopen_files_limit=8192/' /etc/my.cnf.d/server.cnf
 if [ "$CENTOS_MAJOR_VER" = '7' ]; then
@@ -144,11 +145,11 @@ fi
 # If the log file hasn't been aliased yet, deal with that
 if [ -f "/var/log/mysqld.log" ]; then
   mv /var/log/mysqld.log /var/log/mysqld.log.bak
-else
-  touch /var/log/mysqld.log
+elif [ -L "/var/log/mysqld.log" ]; then #symlink
+  rm -f /var/log/mysqld.log
 fi
-# Link mysqld.log to mariadb log file location
-ln -s /var/lib/mysql/$(hostname -f).err /var/log/mysqld.log
+# Link /var/log/mysqld.log to mariadb log file location
+ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
 # Update systemctl to recognize latest mariadb
 systemctl daemon-reload
