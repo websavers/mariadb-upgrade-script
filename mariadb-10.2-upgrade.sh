@@ -144,9 +144,11 @@ fi
 # If the log file hasn't been aliased yet, deal with that
 if [ -f "/var/log/mysqld.log" ]; then
   mv /var/log/mysqld.log /var/log/mysqld.log.bak
-  # Link mysqld.log to mariadb log file location
-  ln -s /var/lib/mysql/$(hostname -f).err /var/log/mysqld.log
+else
+  touch /var/log/mysqld.log
 fi
+# Link mysqld.log to mariadb log file location
+ln -s /var/lib/mysql/$(hostname -f).err /var/log/mysqld.log
 
 # Update systemctl to recognize latest mariadb
 systemctl daemon-reload
