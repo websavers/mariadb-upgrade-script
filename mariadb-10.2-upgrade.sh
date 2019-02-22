@@ -15,6 +15,7 @@ while true; do
         ;;
   * ) echo "Please answer yes or no.";;
 esac
+done
 
 MySQL_VERS_INFO=$(mysql --version)
 case $MySQL_VERS_INFO in
@@ -130,8 +131,16 @@ esac
 ######
 
 # Inform Plesk
-plesk sbin packaging -sdf
+plesk sbin packagemng -sdf
 
+# Increase MySQL/MariaDB Packet Size and open file limit
+sed -i 's/^\[mysqld\]/&\nmax_allowed_packet=64M/' /etc/my.cnf.d/server.cnf
+sed -i 's/^\[mysqld\]/&\nopen_files_limit=8192/' /etc/my.cnf.d/server.cnf
+if [ "$CENTOS_MAJOR_VER" = '7' ]; then
+  systemctl restart mysql
+else
+  service mysql restart
+fi
 # If the log file hasn't been aliased yet, deal with that
 if [ -f "/var/log/mysqld.log" ]; then
   mv /var/log/mysqld.log /var/log/mysqld.log.bak
