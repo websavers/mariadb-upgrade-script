@@ -66,6 +66,10 @@ fi
 
 #install MariaDB 10
 
+if [ -f "/etc/yum.repos.d/MariaDB.repo" ] ; then
+  mv /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo
+fi
+
 if [ -f "/etc/yum.repos.d/mariadb.repo" ] ; then
   echo "MariaDB detected. Proceeding with upgrade..."
 else

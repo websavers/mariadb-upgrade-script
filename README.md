@@ -19,7 +19,9 @@ Integrated with Plesk tools to back up, upgrade DBs, and notify Plesk of version
  - Added MariaDB/MySQL version checks. Switch case to allow for different options.
  - Added ability to upgrade from MariaDB 5.5 w/warning and user prompt.
  - Offers to make backup of DBs (and actually does if you tell it to) *Untested as of Feb 21st*
-
+ 2019-02-22
+ - Add detection of MariaDB.repo file and rename to lowercase prior to remaining steps
+ 
 ## Current Status:
 Tested and working OK except as (if) noted.
 
