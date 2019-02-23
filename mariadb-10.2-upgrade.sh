@@ -155,5 +155,13 @@ fi
 # Link /var/log/mysqld.log to mariadb log file location
 ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
+# Set /root/.my.cnf to allow commands like mysqladmin processlist without un/pw
+# Also repairs logrotate
+MYSQL_PWD=$(cat /etc/psa/.psa.shadow) && echo "[mysqladmin]
+user=admin
+password=$MYSQL_PWD" > /root/.my.cnf
+chmod 600 /root/.my.cnf
+MYSQL_PWD=''
+
 # Update systemctl to recognize latest mariadb
 systemctl daemon-reload
