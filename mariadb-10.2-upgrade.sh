@@ -156,7 +156,7 @@ fi
 ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
 # Set /root/.my.cnf to allow commands like mysqladmin processlist without un/pw
-# Also repairs logrotate
+# Needed for logrotate
 MYSQL_PWD=$(cat /etc/psa/.psa.shadow) && echo "[mysqladmin]
 user=admin
 password=$MYSQL_PWD" > /root/.my.cnf
