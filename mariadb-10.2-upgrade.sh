@@ -10,7 +10,7 @@ while true; do
         break
         ;;
       [Nn]* )
-        echo "A risk taker, I see. Carrying on with upgrade procedures."
+        echo "A risk taker, I see. Carrying on with upgrade procedures..."
         break
         ;;
   * ) echo "Please answer yes or no.";;
@@ -62,6 +62,12 @@ read -p "Are you sure you wish to proceed with the upgrade to 10.2? (y/n)" -n 1 
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]] ; then
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
+fi
+
+if [ "$CENTOS_MAJOR_VER" = '7' ]; then
+  systemctl stop sw-cp-server
+else
+  service sw-cp-server stop
 fi
 
 #install MariaDB 10
@@ -130,6 +136,7 @@ case $UPGRADE_STEPS in
     exit 1
     ;;
 esac
+
 ######
 # At completion of all upgrades
 ######
@@ -143,8 +150,10 @@ sed -i 's/^\[mysqld\]/&\nmax_allowed_packet=64M/' /etc/my.cnf.d/server.cnf
 sed -i 's/^\[mysqld\]/&\nopen_files_limit=8192/' /etc/my.cnf.d/server.cnf
 if [ "$CENTOS_MAJOR_VER" = '7' ]; then
   systemctl restart mysql
+  systemctl restart sw-cp-server
 else
   service mysql restart
+  service sw-cp-server restart
 fi
 # If the log file hasn't been aliased yet, deal with that
 if [ -f "/var/log/mysqld.log" ]; then
