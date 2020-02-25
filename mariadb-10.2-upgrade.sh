@@ -173,4 +173,6 @@ chmod 600 /root/.my.cnf
 MYSQL_PWD=''
 
 # Update systemctl to recognize latest mariadb
-systemctl daemon-reload
+if [ "$CENTOS_MAJOR_VER" = '7' ]; then
+  systemctl daemon-reload
+fi
