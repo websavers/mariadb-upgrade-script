@@ -5,8 +5,8 @@ while true; do
     read -p "Do you wish to back up all existing databases?" yn
     case $yn in
       [Yy]* )
-        echo "Proceeding with backup to /tmp/all-databases.sql. Stand by."
-        MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers > /tmp/all-databases.sql
+        echo "Proceeding with backup to /root/all_databases_pre_maria_10_2_upgrade.sql.gz ... Stand by."
+        MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers | gzip > /root/all_databases_pre_maria_10_2_upgrade.sql.gz
         break
         ;;
       [Nn]* )
