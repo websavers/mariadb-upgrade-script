@@ -37,13 +37,14 @@ if [ -f "/etc/yum.repos.d/MariaDB.repo" ] ; then
 fi
 
 
-function do_mariadb_upgrade{
+do_mariadb_upgrade(){
 
   MDB_VER=$1
   CENTOS_MAJOR_VER=$(rpm --eval '%{centos_ver}')
   echo "Upgrading to MariaDB $MDB_VER..."
 
-  echo "# MariaDB $MDB_VER CentOS repository list - created 2019-02-20 23:18 UTC
+  DATE=$(date)
+  echo "# MariaDB $MDB_VER CentOS repository list - created $DATE
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
@@ -53,7 +54,9 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
   mv -f /etc/my.cnf /etc/my.cnf.bak
 
-  yum -y update
+  yum -y install MariaDB
+  yum -y update MariaDB-*
+  
   if [ "$CENTOS_MAJOR_VER" = '7' ]; then
     systemctl stop mysql
   else
@@ -76,19 +79,22 @@ MySQL_VERS_INFO=$(mysql --version)
 
 case $MySQL_VERS_INFO in
     *"Distrib 5.5."*)
-      echo "MySQL / MariaDB 5.5 detected. Proceeding with 5.5 -> 10.0 -> 10.1 -> 10.2"
+      echo "MySQL / MariaDB 5.5 detected. Proceeding with 5.5 -> 10.0 -> 10.2"
       rpm -e --nodeps mysql-server
       do_mariadb_upgrade '10.0'
-      do_mariadb_upgrade '10.1'
+      #do_mariadb_upgrade '10.1'
       do_mariadb_upgrade '10.2'
       ;;
     
     *"Distrib 5.6."*)
-      echo "MySQL or Percona 5.6 detected. Proceeding with 5.6 -> 10.0 -> 10.1 -> 10.2"
+      echo "MySQL or Percona 5.6 detected. Proceeding with 5.6 -> 10.0 -> 10.2"
       
       if [[ $(rpm -qa | grep Percona-Server-server) ]]; then
         # Removing Percona server and disabling repo
-        rpm -e --nodeps Percona-Server-*
+        rpm -e --nodeps Percona-Server-server-56
+        rpm -e --nodeps Percona-Server-shared-56
+        rpm -e --nodeps Percona-Server-client-56
+        rpm -e --nodeps Percona-Server-shared-51
         sed -i 's/^enabled = 1/enabled = 0/' /etc/yum.repos.d/percona-original-release.repo
       else
         # Removing MySQL 5.6 server
@@ -96,12 +102,13 @@ case $MySQL_VERS_INFO in
       fi
       
       do_mariadb_upgrade '10.0'
-      do_mariadb_upgrade '10.1'
+      #do_mariadb_upgrade '10.1'
       do_mariadb_upgrade '10.2'
-    
+      ;;
+      
     *"Distrib 10.0"*)
-      echo "MariaDB 10.0 detected. Proceeding with 10.0 -> 10.1 -> 10.2"
-      do_mariadb_upgrade '10.1'
+      echo "MariaDB 10.0 detected. Proceeding with 10.0 -> 10.2"
+      #do_mariadb_upgrade '10.1'
       do_mariadb_upgrade '10.2'
       ;;
       
@@ -131,6 +138,15 @@ sed -i 's/^\[mysqld\]/&\nlog-error=\/var\/lib\/mysql\/mysqld.log/' /etc/my.cnf.d
 sed -i 's/^\[mysqld\]/&\nmax_allowed_packet=64M/' /etc/my.cnf.d/server.cnf
 sed -i 's/^\[mysqld\]/&\nopen_files_limit=8192/' /etc/my.cnf.d/server.cnf
 
+# If the log file hasn't been aliased yet, deal with that
+if [ -f "/var/log/mysqld.log" ]; then
+  mv /var/log/mysqld.log /var/log/mysqld.log.bak
+elif [ -L "/var/log/mysqld.log" ]; then #symlink
+  rm -f /var/log/mysqld.log
+fi
+# Link /var/log/mysqld.log to mariadb log file location
+ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
+
 echo "Informing Plesk of Changes..."
 plesk bin service_node --update local
 plesk sbin packagemng -sdf
@@ -142,15 +158,6 @@ else
   service mysql restart
   service sw-cp-server restart
 fi
-
-# If the log file hasn't been aliased yet, deal with that
-if [ -f "/var/log/mysqld.log" ]; then
-  mv /var/log/mysqld.log /var/log/mysqld.log.bak
-elif [ -L "/var/log/mysqld.log" ]; then #symlink
-  rm -f /var/log/mysqld.log
-fi
-# Link /var/log/mysqld.log to mariadb log file location
-ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
 # Allow commands like mysqladmin processlist without un/pw
 # Needed for logrotate
