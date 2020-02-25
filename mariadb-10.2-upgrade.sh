@@ -164,13 +164,9 @@ fi
 # Link /var/log/mysqld.log to mariadb log file location
 ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
-# Set /root/.my.cnf to allow commands like mysqladmin processlist without un/pw
+# Allow commands like mysqladmin processlist without un/pw
 # Needed for logrotate
-MYSQL_PWD=$(cat /etc/psa/.psa.shadow) && echo "[mysqladmin]
-user=admin
-password=$MYSQL_PWD" > /root/.my.cnf
-chmod 600 /root/.my.cnf
-MYSQL_PWD=''
+plesk db "install plugin unix_socket soname 'auth_socket'; CREATE USER 'root'@'localhost' IDENTIFIED VIA unix_socket;"
 
 # Update systemctl to recognize latest mariadb
 if [ "$CENTOS_MAJOR_VER" = '7' ]; then
