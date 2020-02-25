@@ -18,6 +18,7 @@ esac
 done
 
 MySQL_VERS_INFO=$(mysql --version)
+
 case $MySQL_VERS_INFO in
     *"Distrib 5.5."*)
       UPGRADE_STEPS=3
@@ -26,38 +27,46 @@ case $MySQL_VERS_INFO in
           read -p "Do you wish to attempt to upgrade through to 10.2?" yn
           case $yn in
             [Yy]* )
-            CENTOS_MAJOR_VER=$(rpm --eval '%{centos_ver}')
-            echo "# MariaDB 10.0 CentOS repository list - created 2019-02-20 23:18 UTC
+              CENTOS_MAJOR_VER=$(rpm --eval '%{centos_ver}')
+              echo "# MariaDB 10.0 CentOS repository list - created 2019-02-20 23:18 UTC
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
 baseurl = http://yum.mariadb.org/10.0/centos$CENTOS_MAJOR_VER-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
-            break
-            ;;
-        [Nn]* ) exit;;
-        * ) echo "Please answer yes or no.";;
-    esac
-done
+              break
+              ;;
+              
+            [Nn]* ) 
+              exit
+              ;;
+             * ) echo "Please answer yes or no.";;
+           esac
+      done
       ;;
+      
     *"Distrib 10.0"*)
       echo "MariaDB 10.0 detected. Proceeding with full upgrade to 10.2"
       UPGRADE_STEPS='2'
       ;;
+      
     *"Distrib 10.1"*)
       echo "MariaDB 10.1 detected. Proceeding with partial upgrade to 10.2"
       UPGRADE_STEPS='1'
       ;;
+      
     *"Distrib 10.2"*)
       echo "Already at 10.2. Exiting."
       exit 1
       ;;
+      
     *)
       echo "Error. Unknown initial MySQL version. Aborting."
       exit 1
       ;;
-    esac
+esac
+    
 read -p "Are you sure you wish to proceed with the upgrade to 10.2? (y/n)" -n 1 -r
 echo    # (optional) move to a new line
 if [[ ! $REPLY =~ ^[Yy]$ ]] ; then
@@ -127,6 +136,7 @@ case $UPGRADE_STEPS in
     do_mariadb_upgrade '10.2'
     ;;
   3)
+    rpm -e --nodeps mysql-server
     do_mariadb_upgrade '10.0'
     do_mariadb_upgrade '10.1'
     do_mariadb_upgrade '10.2'
