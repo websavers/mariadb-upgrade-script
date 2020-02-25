@@ -82,7 +82,23 @@ case $MySQL_VERS_INFO in
       do_mariadb_upgrade '10.1'
       do_mariadb_upgrade '10.2'
       ;;
+    
+    *"Distrib 5.6."*)
+      echo "MySQL or Percona 5.6 detected. Proceeding with 5.6 -> 10.0 -> 10.1 -> 10.2"
       
+      if [[ $(rpm -qa | grep Percona-Server-server) ]]; then
+        # Removing Percona server and disabling repo
+        rpm -e --nodeps Percona-Server-*
+        sed -i 's/^enabled = 1/enabled = 0/' /etc/yum.repos.d/percona-original-release.repo
+      else
+        # Removing MySQL 5.6 server
+        rpm -e --nodeps mysql-server
+      fi
+      
+      do_mariadb_upgrade '10.0'
+      do_mariadb_upgrade '10.1'
+      do_mariadb_upgrade '10.2'
+    
     *"Distrib 10.0"*)
       echo "MariaDB 10.0 detected. Proceeding with 10.0 -> 10.1 -> 10.2"
       do_mariadb_upgrade '10.1'
