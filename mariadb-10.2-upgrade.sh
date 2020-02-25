@@ -115,7 +115,8 @@ sed -i 's/^\[mysqld\]/&\nlog-error=\/var\/lib\/mysql\/mysqld.log/' /etc/my.cnf.d
 sed -i 's/^\[mysqld\]/&\nmax_allowed_packet=64M/' /etc/my.cnf.d/server.cnf
 sed -i 's/^\[mysqld\]/&\nopen_files_limit=8192/' /etc/my.cnf.d/server.cnf
 
-# Inform Plesk
+echo "Informing Plesk of Changes..."
+plesk bin service_node --update local
 plesk sbin packagemng -sdf
 
 if [ "$CENTOS_MAJOR_VER" = '7' ]; then
