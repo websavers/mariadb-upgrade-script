@@ -162,6 +162,7 @@ fi
 # Allow commands like mysqladmin processlist without un/pw
 # Needed for logrotate
 plesk db "install plugin unix_socket soname 'auth_socket'; CREATE USER 'root'@'localhost' IDENTIFIED VIA unix_socket;"
+plesk db "GRANT RELOAD ON *.* TO 'root'@'localhost';"
 
 # Update systemctl to recognize latest mariadb
 if [ "$CENTOS_MAJOR_VER" = '7' ]; then
