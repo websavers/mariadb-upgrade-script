@@ -147,6 +147,15 @@ fi
 # Link /var/log/mysqld.log to mariadb log file location
 ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
+echo "Ensuring systemd doesn't mix up mysql and mariadb"
+systemctl stop mysql
+systemctl stop mariadb
+chkconfig --del mysql
+systemctl disable mysql
+systemctl disable mariadb
+systemctl enable mariadb.service
+systemctl start mariadb.service
+
 echo "Informing Plesk of Changes..."
 plesk bin service_node --update local
 plesk sbin packagemng -sdf
