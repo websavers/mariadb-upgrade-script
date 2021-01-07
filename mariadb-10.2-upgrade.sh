@@ -5,7 +5,7 @@ while true; do
     read -p "Do you wish to back up all existing databases?" yn
     case $yn in
       [Yy]* )
-        echo "Proceeding with backup to /root/all_databases_pre_maria_10_2_upgrade.sql.gz ... Stand by."
+        echo "Proceeding with backup to /root/all_databases_pre_maria_10_4_upgrade.sql.gz ... Stand by."
         MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers | gzip > /root/all_databases_pre_maria_10_2_upgrade.sql.gz
         break
         ;;
@@ -17,7 +17,7 @@ while true; do
 esac
 done
 
-read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.2? (y/n)" -n 1 -r
+read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.4? (y/n)" -n 1 -r
 echo    # new line
 if [[ ! $REPLY =~ ^[Yy]$ ]] ; then
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
@@ -107,20 +107,32 @@ case $MySQL_VERS_INFO in
       ;;
       
     *"Distrib 10.0"*)
-      echo "MariaDB 10.0 detected. Proceeding with 10.0 -> 10.2"
+      echo "MariaDB 10.1 detected. Proceeding with upgrade to 10.4"
       #do_mariadb_upgrade '10.1'
-      do_mariadb_upgrade '10.2'
+      do_mariadb_upgrade '10.4'
       ;;
       
     *"Distrib 10.1"*)
-      echo "MariaDB 10.1 detected. Proceeding with upgrade to 10.2"
-      do_mariadb_upgrade '10.2'
+      echo "MariaDB 10.1 detected. Proceeding with upgrade to 10.4"
+      do_mariadb_upgrade '10.4'
       ;;
       
     *"Distrib 10.2"*)
-      echo "Already at 10.2. Exiting."
+      echo "MariaDB 10.2 detected. Proceeding with upgrade to 10.4"
+      do_mariadb_upgrade '10.4'
+      ;;
+      
+    *"Distrib 10.3"*)
+      echo "MariaDB 10.3 detected. Proceeding with upgrade to 10.4"
+      do_mariadb_upgrade '10.4'
+      ;;
+      
+    *"Distrib 10.4"*)
+      echo "Already at 10.4. Exiting."
       exit 1
       ;;
+      
+
       
     *)
       echo "Error. Unknown initial MySQL version. Aborting."
