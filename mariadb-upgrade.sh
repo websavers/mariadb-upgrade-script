@@ -54,6 +54,7 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
   mv -f /etc/my.cnf /etc/my.cnf.bak
 
+  yum clean all
   yum -y install MariaDB
   yum -y update MariaDB-*
   
