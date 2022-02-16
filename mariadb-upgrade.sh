@@ -144,6 +144,9 @@ sed -i 's/^\[mysqld\]/&\nlog-error=\/var\/lib\/mysql\/mysqld.log/' /etc/my.cnf.d
 sed -i 's/^\[mysqld\]/&\nmax_allowed_packet=64M/' /etc/my.cnf.d/server.cnf
 sed -i 's/^\[mysqld\]/&\nopen_files_limit=8192/' /etc/my.cnf.d/server.cnf
 
+# Enable the event scheduler like it was in 10.4 and earlier
+sed -i 's/^\[mariadb\]/&\nevent_scheduler=ON/' /etc/my.cnf.d/server.cnf
+
 # If the log file hasn't been aliased yet, deal with that
 if [ -f "/var/log/mysqld.log" ]; then
   mv /var/log/mysqld.log /var/log/mysqld.log.bak
