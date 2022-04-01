@@ -195,7 +195,7 @@ elif echo $mdb_ver | grep -q 10.5.15; then
 
 fi 
 
-# If you needed to install Plesk updates, now run `plesk installer update`
+# If you needed the above to install Plesk updates, now run `plesk installer update`
 
 # END BUGFIX
 
