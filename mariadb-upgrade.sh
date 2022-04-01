@@ -23,13 +23,6 @@ if [[ ! $REPLY =~ ^[Yy]$ ]] ; then
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
 fi
 
-systemctl stop sw-cp-server
-
-#Consistency in repo naming, if one already exists
-if [ -f "/etc/yum.repos.d/MariaDB.repo" ] ; then
-  mv /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo
-fi
-
 
 do_mariadb_upgrade(){
 
@@ -52,18 +45,13 @@ baseurl = http://yum.mariadb.org/$MDB_VER/$ID$MAJOR_VER-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
-  mv -f /etc/my.cnf /etc/my.cnf.bak
-
-  yum clean all
-  yum -y install MariaDB
-  yum -y update MariaDB-*
-  
   systemctl stop mysql
-    
-  rpm -e --nodeps MariaDB-server
-  yum -y install MariaDB-server
 
-  systemctl restart mysql
+  rpm -e --nodeps MariaDB-server
+  yum -y install MariaDB-server MariaDB
+  yum -y update MariaDB-*    
+
+  systemctl restart mariadb
 
   MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysql_upgrade -uadmin
 
@@ -71,10 +59,19 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
 MySQL_VERS_INFO=$(mysql --version)
 
+#Consistency in repo naming, if one already exists
+if [ -f "/etc/yum.repos.d/MariaDB.repo" ] ; then
+  mv /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo
+fi
+
+yum clean all
+systemctl stop sw-cp-server
+
 case $MySQL_VERS_INFO in
     *"Distrib 5.5."*)
       echo "MySQL / MariaDB 5.5 detected. Proceeding with 5.5 -> 10.0 -> 10.5"
       rpm -e --nodeps mysql-server
+      mv -f /etc/my.cnf /etc/my.cnf.bak
       do_mariadb_upgrade '10.0'
       do_mariadb_upgrade '10.5'
       ;;
@@ -93,18 +90,26 @@ case $MySQL_VERS_INFO in
         # Removing MySQL 5.6 server
         rpm -e --nodeps mysql-server
       fi
+
+      mv -f /etc/my.cnf /etc/my.cnf.bak
       
       do_mariadb_upgrade '10.0'
+      do_mariadb_upgrade '10.1'
+      do_mariadb_upgrade '10.2'
       do_mariadb_upgrade '10.5'
       ;;
       
     *"Distrib 10.0"*)
       echo "MariaDB 10.0 detected. Proceeding with upgrade to 10.5"
+      mv -f /etc/my.cnf /etc/my.cnf.bak
+      do_mariadb_upgrade '10.1'
+      do_mariadb_upgrade '10.2'
       do_mariadb_upgrade '10.5'
       ;;
       
     *"Distrib 10.1"*)
       echo "MariaDB 10.1 detected. Proceeding with upgrade to 10.5"
+      do_mariadb_upgrade '10.2'
       do_mariadb_upgrade '10.5'
       ;;
       
@@ -166,6 +171,7 @@ systemctl enable mariadb.service
 systemctl start mariadb.service
 
 
+echo "Fixing Plesk bug MDEV-27834"
 # BUGFIX MDEV-27834: https://support.plesk.com/hc/en-us/articles/4419625529362-Plesk-Installer-fails-when-MariaDB-10-5-or-10-6-is-installed
 
 mdb_ver=$(rpm -q MariaDB-shared | awk -F- '{print $3}')
