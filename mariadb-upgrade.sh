@@ -42,6 +42,7 @@ do_mariadb_upgrade(){
 [mariadb]
 name = MariaDB
 baseurl = http://yum.mariadb.org/$MDB_VER/$ID$MAJOR_VER-amd64
+module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
