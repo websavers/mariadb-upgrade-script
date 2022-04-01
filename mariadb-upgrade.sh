@@ -48,9 +48,10 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
   systemctl stop mysql
 
   rpm -e --nodeps MariaDB-server
+  rpm -e --nodeps mariadb-server
+  yum -y update MariaDB-*
   yum -y install MariaDB-server MariaDB
-  yum -y update MariaDB-*    
-
+  
   systemctl restart mariadb
 
   MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysql_upgrade -uadmin
