@@ -199,9 +199,11 @@ fi
 
 # END BUGFIX
 
+
 echo "Informing Plesk of Changes..."
-plesk bin service_node --update local
+#plesk bin service_node --update local
 plesk sbin packagemng -sdf
+restorecon -v /var/lib/mysql/*
 
 systemctl restart sw-cp-server
 systemctl daemon-reload
