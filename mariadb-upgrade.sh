@@ -50,6 +50,7 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
   rpm -e --nodeps MariaDB-server
   rpm -e --nodeps mariadb-server
+  rpm -e mysql-common mysql-libs mysql-devel mariadb-backup
   yum -y update MariaDB-*
   yum -y install MariaDB-server MariaDB
   
