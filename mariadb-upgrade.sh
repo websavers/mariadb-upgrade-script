@@ -28,7 +28,7 @@ do_mariadb_upgrade(){
   
   if [[ "$ID" = "almalinux" ]] ; then ID=rhel; fi
   
-  echo "Upgrading to MariaDB $MDB_VER..."
+  echo "Beginning upgrade to MariaDB $MDB_VER..."
 
   DATE=$(date)
   echo "# MariaDB $MDB_VER CentOS repository list - created $DATE
@@ -40,16 +40,24 @@ module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
+  echo "- Clearing mariadb repo cache"
+  yum clean all --disablerepo="*" --enablerepo=mariadb
+  echo "- Stopping current db server"
   systemctl stop mysql
 
+  echo "- Removing packages"
   rpm -e --nodeps MariaDB-server > /dev/null 2>&1
   rpm -e --nodeps mariadb-server > /dev/null 2>&1
   rpm -e mysql-common mysql-libs mysql-devel mariadb-backup > /dev/null 2>&1
+
+  echo "- Updating and installing packages"
   yum -y update MariaDB-*
   yum -y install MariaDB-server MariaDB
   
+  echo "- Starting MariaDB $MDB_VER"
   systemctl restart mariadb
 
+  echo "- Running mysql_upgrade"
   MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysql_upgrade -uadmin
 
 }
@@ -61,7 +69,6 @@ if [ -f "/etc/yum.repos.d/MariaDB.repo" ] ; then
   mv /etc/yum.repos.d/MariaDB.repo /etc/yum.repos.d/mariadb.repo
 fi
 
-yum clean all
 systemctl stop sw-cp-server
 
 case $MySQL_VERS_INFO in
