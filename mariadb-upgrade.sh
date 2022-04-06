@@ -1,23 +1,17 @@
 #!/bin/bash
 
 echo "Beginning upgrade procedure."
-while true; do
-    read -p "Do you wish to back up all existing databases?" yn
-    case $yn in
-      [Yy]* )
-        echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... Stand by."
-        MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers | gzip > /root/all_databases_pre_maria_upgrade.sql.gz
-        break
-        ;;
-      [Nn]* )
-        echo "A risk taker, I see. Carrying on with upgrade procedures..."
-        break
-        ;;
-  * ) echo "Please answer yes or no.";;
-esac
-done
 
-read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.5? (y/n)" -n 1 -r
+read -p "Do you wish to back up all existing databases? (y/n) " -n 1 -r
+echo    # new line
+if [[ ! $REPLY =~ ^[Nn]$ ]] ; then
+    echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... This may take 5 minutes or so depending on qty of databases."
+    MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers | gzip > /root/all_databases_pre_maria_upgrade.sql.gz
+else
+    echo "A risk taker, I see. Carrying on with upgrade procedures without backup..."
+fi
+
+read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.5? (y/n) " -n 1 -r
 echo    # new line
 if [[ ! $REPLY =~ ^[Yy]$ ]] ; then
     [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
