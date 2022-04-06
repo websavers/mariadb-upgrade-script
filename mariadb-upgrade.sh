@@ -48,9 +48,9 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
 
   systemctl stop mysql
 
-  rpm -e --nodeps MariaDB-server > /dev/null
-  rpm -e --nodeps mariadb-server > /dev/null
-  rpm -e mysql-common mysql-libs mysql-devel mariadb-backup > /dev/null
+  rpm -e --nodeps MariaDB-server > /dev/null 2>&1
+  rpm -e --nodeps mariadb-server > /dev/null 2>&1
+  rpm -e mysql-common mysql-libs mysql-devel mariadb-backup > /dev/null 2>&1
   yum -y update MariaDB-*
   yum -y install MariaDB-server MariaDB
   
@@ -214,5 +214,5 @@ systemctl daemon-reload
 
 # Allow commands like mysqladmin processlist without un/pw
 # Needed for logrotate
-plesk db "install plugin unix_socket soname 'auth_socket'; CREATE USER 'root'@'localhost' IDENTIFIED VIA unix_socket;" > /dev/null
-plesk db "GRANT RELOAD ON *.* TO 'root'@'localhost';" > /dev/null
+plesk db "install plugin unix_socket soname 'auth_socket'; CREATE USER 'root'@'localhost' IDENTIFIED VIA unix_socket;" > /dev/null 2>&1
+plesk db "GRANT RELOAD ON *.* TO 'root'@'localhost';" > /dev/null 2>&1
