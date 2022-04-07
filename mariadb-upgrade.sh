@@ -6,7 +6,7 @@ read -p "Do you wish to back up all existing databases? (y/n) " -n 1 -r
 echo    # new line
 if [[ ! $REPLY =~ ^[Nn]$ ]] ; then
     echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... This may take 5 minutes or so depending on size of databases."
-    MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers | gzip > /root/all_databases_pre_maria_upgrade.sql.gz
+    MYSQL_PWD=`cat /etc/psa/.psa.shadow` mysqldump -u admin --all-databases --routines --triggers --max_allowed_packet=1G | gzip > /root/all_databases_pre_maria_upgrade.sql.gz
 else
     echo "A risk taker, I see. Carrying on with upgrade procedures without backup..."
 fi
