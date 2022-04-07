@@ -215,5 +215,6 @@ systemctl daemon-reload
 
 # Allow commands like mysqladmin processlist without un/pw
 # Needed for logrotate
-plesk db "install plugin unix_socket soname 'auth_socket'; CREATE USER 'root'@'localhost' IDENTIFIED VIA unix_socket;" > /dev/null 2>&1
+plesk db "install plugin unix_socket soname 'auth_socket';" > /dev/null 2>&1
+plesk db "CREATE USER 'root'@'localhost' IDENTIFIED VIA unix_socket;" > /dev/null 2>&1
 plesk db "GRANT RELOAD ON *.* TO 'root'@'localhost';" > /dev/null 2>&1
