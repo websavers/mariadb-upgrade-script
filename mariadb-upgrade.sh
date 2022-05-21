@@ -48,11 +48,11 @@ gpgcheck=1" > /etc/yum.repos.d/mariadb.repo
   echo "- Removing packages"
   rpm -e --nodeps MariaDB-server > /dev/null 2>&1
   rpm -e --nodeps mariadb-server > /dev/null 2>&1
-  rpm -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup > /dev/null 2>&1
+  rpm -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server > /dev/null 2>&1
 
   echo "- Updating and installing packages"
   yum -y update MariaDB-*
-  yum -y install MariaDB-server MariaDB
+  yum -y install MariaDB-server MariaDB MariaDB-gssapi-server
   
   echo "- Starting MariaDB $MDB_VER"
   systemctl restart mariadb
