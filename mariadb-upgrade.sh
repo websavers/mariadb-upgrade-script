@@ -77,7 +77,6 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
 
   echo "- Running mysql_upgrade"
   MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
-  read -p "Func" -n 1 -r
 }
 
 MySQL_VERS_INFO=$(mysql --version)
