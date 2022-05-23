@@ -32,7 +32,19 @@ do_mariadb_upgrade() {
   echo "Beginning upgrade to MariaDB $MDB_VER..."
 
   DATE=$(date)
-  echo "# MariaDB $MDB_VER CentOS repository list - created $DATE
+  if [ "$MDB_VER" = "10.0" ]; then
+
+    echo "# MariaDB $MDB_VER CentOS repository list - created $DATE
+# 10.0.38 is the latest version in 10.0.x
+[mariadb]
+name = MariaDB
+baseurl = https://archive.mariadb.org/mariadb-10.0.38/yum/centos7-amd64/
+module_hotfixes=1
+gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
+
+  else
+    echo "# MariaDB $MDB_VER CentOS repository list - created $DATE
 # http://downloads.mariadb.org/mariadb/repositories/
 [mariadb]
 name = MariaDB
@@ -41,26 +53,26 @@ module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
 
-  echo "- Clearing mariadb repo cache"
-  yum clean all --disablerepo="*" --enablerepo=mariadb
-  echo "- Stopping current db server"
-  systemctl stop mariadb || systemctl stop mysql
+    echo "- Clearing mariadb repo cache"
+    yum clean all --disablerepo="*" --enablerepo=mariadb
+    echo "- Stopping current db server"
+    systemctl stop mariadb || systemctl stop mysql
 
-  echo "- Removing packages"
-  rpm --quiet -e --nodeps MariaDB-server
-  rpm --quiet -e --nodeps mariadb-server
-  rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server
+    echo "- Removing packages"
+    rpm --quiet -e --nodeps MariaDB-server
+    rpm --quiet -e --nodeps mariadb-server
+    rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server
 
-  echo "- Updating and installing packages"
-  yum -y -q update MariaDB-*
-  yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
+    echo "- Updating and installing packages"
+    yum -y -q update MariaDB-*
+    yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
 
-  echo "- Starting MariaDB $MDB_VER"
-  systemctl restart mariadb
+    echo "- Starting MariaDB $MDB_VER"
+    systemctl restart mariadb
 
-  echo "- Running mysql_upgrade"
-  MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
-
+    echo "- Running mysql_upgrade"
+    MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
+  fi
 }
 
 MySQL_VERS_INFO=$(mysql --version)
