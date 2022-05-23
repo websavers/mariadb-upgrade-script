@@ -69,10 +69,15 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
 
   echo "- Starting MariaDB $MDB_VER"
-  systemctl restart mariadb
+  if [ "$MDB_VER" = "10.0" ]; then
+    systemctl restart mysql
+  else
+    systemctl restart mariadb
+  fi
 
   echo "- Running mysql_upgrade"
   MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
+  read -p "Func" -n 1 -r
 }
 
 MySQL_VERS_INFO=$(mysql --version)
