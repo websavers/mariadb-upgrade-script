@@ -14,6 +14,7 @@ fi
 read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.5? (y/n) " -n 1 -r
 echo # new line
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+  # shellcheck disable=SC2128
   [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1 # handle exits from shell or function but don't exit interactive shell
 fi
 
@@ -22,6 +23,7 @@ do_mariadb_upgrade() {
   MDB_VER=$1
   #MAJOR_VER=$(rpm --eval '%{rhel}')
   # Gets us ID and VERSION_ID vars
+  # shellcheck disable=SC1091
   source /etc/os-release
   MAJOR_VER="${VERSION_ID:0:1}" #ex: 7 or 8 rather than 7.4 or 8.4
 
@@ -81,7 +83,7 @@ case $MySQL_VERS_INFO in
 
 *"Distrib 5.6."*)
   echo "MySQL or Percona 5.6 detected. Proceeding with 5.6 -> 10.0 -> 10.5"
-
+  # shellcheck disable=SC2143
   if [[ $(rpm -qa | grep Percona-Server-server) ]]; then
     # Removing Percona server and disabling repo
     rpm -e --nodeps Percona-Server-server-56
@@ -176,19 +178,19 @@ echo "Fixing Plesk bug MDEV-27834"
 
 mdb_ver=$(rpm -q MariaDB-shared | awk -F- '{print $3}')
 
-if echo $mdb_ver | grep -q 10.3.34; then
+if echo "$mdb_ver" | grep -q 10.3.34; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.3/rhel8-amd64/rpms/MariaDB-shared-10.3.32-1.el8.x86_64.rpm
   yum -y downgrade MariaDB-shared-10.3.32
   echo "exclude=MariaDB-shared-10.3.34" >>/etc/yum.repos.d/mariadb.repo
 
-elif echo $mdb_ver | grep -q 10.4.24; then
+elif echo "$mdb_ver" | grep -q 10.4.24; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.4/rhel8-amd64/rpms/MariaDB-shared-10.4.22-1.el8.x86_64.rpm
   yum -y downgrade MariaDB-shared-10.4.22
   echo "exclude=MariaDB-shared-10.4.24" >>/etc/yum.repos.d/mariadb.repo
 
-elif echo $mdb_ver | grep -q 10.5.15; then
+elif echo "$mdb_ver" | grep -q 10.5.15; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.5/rhel8-amd64/rpms/MariaDB-shared-10.5.13-1.el8.x86_64.rpm
   yum -y downgrade MariaDB-shared-10.5.13
