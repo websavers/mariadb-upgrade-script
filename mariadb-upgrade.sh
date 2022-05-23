@@ -44,7 +44,7 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   echo "- Clearing mariadb repo cache"
   yum clean all --disablerepo="*" --enablerepo=mariadb
   echo "- Stopping current db server"
-  systemctl stop mysql
+  systemctl stop mariadb || systemctl stop mysql
 
   echo "- Removing packages"
   rpm -e --nodeps MariaDB-server >/dev/null 2>&1
