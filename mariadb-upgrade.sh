@@ -52,27 +52,27 @@ baseurl = http://yum.mariadb.org/$MDB_VER/$ID$MAJOR_VER-amd64
 module_hotfixes=1
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
-
-    echo "- Clearing mariadb repo cache"
-    yum clean all --disablerepo="*" --enablerepo=mariadb
-    echo "- Stopping current db server"
-    systemctl stop mariadb || systemctl stop mysql
-
-    echo "- Removing packages"
-    rpm --quiet -e --nodeps MariaDB-server
-    rpm --quiet -e --nodeps mariadb-server
-    rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server
-
-    echo "- Updating and installing packages"
-    yum -y -q update MariaDB-*
-    yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
-
-    echo "- Starting MariaDB $MDB_VER"
-    systemctl restart mariadb
-
-    echo "- Running mysql_upgrade"
-    MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
   fi
+
+  echo "- Clearing mariadb repo cache"
+  yum clean all --disablerepo="*" --enablerepo=mariadb
+  echo "- Stopping current db server"
+  systemctl stop mariadb || systemctl stop mysql
+
+  echo "- Removing packages"
+  rpm --quiet -e --nodeps MariaDB-server
+  rpm --quiet -e --nodeps mariadb-server
+  rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server
+
+  echo "- Updating and installing packages"
+  yum -y -q update MariaDB-*
+  yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
+
+  echo "- Starting MariaDB $MDB_VER"
+  systemctl restart mariadb
+
+  echo "- Running mysql_upgrade"
+  MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
 }
 
 MySQL_VERS_INFO=$(mysql --version)
