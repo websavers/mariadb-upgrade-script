@@ -73,7 +73,11 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
     echo -e "$erroutput ${NC}"
   fi
   echo "- Stopping current db server"
-  systemctl stop mariadb || systemctl stop mysql
+  if systemctl | grep -i "mariadb.service"; then
+    systemctl stop mariadb
+  elif systemctl | grep -i "mysql.service"; then
+    systemctl stop mysql
+  fi
 
   echo "- Removing packages"
   rpm --quiet -e --nodeps MariaDB-server
