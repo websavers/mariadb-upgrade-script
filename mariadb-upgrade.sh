@@ -100,7 +100,7 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
     fi
   done
   if [ ! -z $mariadb_rpm ]; then
-    if erroutput=$(rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server 2>&1); then
+    if erroutput=$(rpm --quiet -e --nodeps $mariadb_rpm 2>&1); then
       echo "MariaDB packages erased"
     else
       echo -e "${RED}$erroutput ${NC}"
