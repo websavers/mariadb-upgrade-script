@@ -36,7 +36,9 @@ do_mariadb_upgrade() {
   source /etc/os-release
   MAJOR_VER="${VERSION_ID:0:1}" #ex: 7 or 8 rather than 7.4 or 8.4
 
-  if [[ "$ID" = "almalinux" ]]; then ID=rhel; fi
+  if [[ "$ID" = "almalinux" ]]; then 
+    ID=rhel; 
+  fi
 
   echo "Beginning upgrade to MariaDB $MDB_VER..."
 
