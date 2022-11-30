@@ -80,9 +80,15 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   fi
 
   echo "- Removing packages"
-  rpm --quiet -e --nodeps MariaDB-server
-  rpm --quiet -e --nodeps mariadb-server
-  rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server
+  if erroutput=$(rpm --quiet -e --nodeps MariaDB-server 2>&1); then
+    echo -e "${RED} $erroutput ${NC}"
+  fi
+  if erroutput=$(rpm --quiet -e --nodeps mariadb-server 2>&1); then
+    echo -e "${RED} $erroutput ${NC}"
+  fi
+  if erroutput=$(rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server 2>&1); then
+    echo -e "${RED} $erroutput ${NC}"
+  fi
 
   echo "- Updating and installing packages"
   yum -y -q update MariaDB-*
