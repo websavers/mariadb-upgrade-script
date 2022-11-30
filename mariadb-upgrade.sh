@@ -1,14 +1,24 @@
 #!/bin/bash
 
-echo "Beginning upgrade procedure."
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+LOG="/var/log/mariadb-upgrade.log"
+
+echo "Beginning upgrade procedure." | tee -a $LOG
 
 read -p "Do you wish to back up all existing databases? (y/n) " -n 1 -r
 echo # new line
 if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-  echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... This may take 5 minutes or so depending on size of databases."
-  MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysqldump -u admin --all-databases --routines --triggers --max_allowed_packet=1G | gzip >/root/all_databases_pre_maria_upgrade.sql.gz
+  echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... This may take 5 minutes or so depending on size of databases."  | tee -a $LOG
+  if erroutput=$(mysqldump -u admin -p$(cat /etc/psa/.psa.shadow) --all-databases --routines --triggers --max_allowed_packet=1G | gzip >/root/all_databases_pre_maria_upgrade.sql.gz 2>&1); then
+    echo "- Backups successfully created" | tee -a $LOG
+  else
+    echo -e "${RED}Error:" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
 else
-  echo "A risk taker, I see. Carrying on with upgrade procedures without backup..."
+  echo "A risk taker, I see. Carrying on with upgrade procedures without backup..." | tee -a $LOG
 fi
 
 read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.5? (y/n) " -n 1 -r
@@ -27,9 +37,11 @@ do_mariadb_upgrade() {
   source /etc/os-release
   MAJOR_VER="${VERSION_ID:0:1}" #ex: 7 or 8 rather than 7.4 or 8.4
 
-  if [[ "$ID" = "almalinux" ]]; then ID=rhel; fi
+  if [[ "$ID" = "almalinux" ]]; then 
+    ID=rhel; 
+  fi
 
-  echo "Beginning upgrade to MariaDB $MDB_VER..."
+  echo "Beginning upgrade to MariaDB $MDB_VER..." | tee -a $LOG
 
   DATE=$(date)
   if [ "$MDB_VER" = "10.0" ]; then
@@ -54,19 +66,65 @@ gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   fi
 
-  echo "- Clearing mariadb repo cache"
-  yum clean all --disablerepo="*" --enablerepo=mariadb
-  echo "- Stopping current db server"
-  systemctl stop mariadb || systemctl stop mysql
+  echo "- Clearing mariadb repo cache" | tee -a $LOG
+  if erroutput=$(yum clean all --disablerepo="*" --enablerepo=mariadb 2>&1); then
+    echo "- mariadb repo cache cleared" | tee -a $LOG
+  else
+    echo -e "${RED}Failed to clear mariadb repo cache" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
+  echo "- Stopping current db server" | tee -a $LOG
+  if systemctl | grep -i "mariadb.service"; then
+    systemctl stop mariadb
+  elif systemctl | grep -i "mysql.service"; then
+    systemctl stop mysql
+  fi
 
   echo "- Removing packages"
-  rpm --quiet -e --nodeps MariaDB-server
-  rpm --quiet -e --nodeps mariadb-server
-  rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server
+  if rpm -qa | grep "MariaDB-server" > /dev/null 2>&1; then
+    if erroutput=$(rpm --quiet -e --nodeps MariaDB-server 2>&1); then
+      echo "- MariaDB-server package erased" | tee -a $LOG
+    else
+      echo -e "${RED}$erroutput ${NC}" | tee -a $LOG
+    fi
+  else
+    if erroutput=$(rpm --quiet -e --nodeps mariadb-server 2>&1); then
+      echo "- MariaDB-server package erased" | tee -a $LOG
+    else
+      echo -e "${RED}$erroutput ${NC}" | tee -a $LOG
+    fi
+  fi
+  installed_packages=$(rpm -qa)
+  for i in "mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server"; do
+    if echo "$installed_packages" | grep "$i" > /dev/null 2>&1; then
+      mariadb_rpm="$mariadb_rpm $i"
+    fi
+  done
+  if [ ! -z $mariadb_rpm ]; then
+    if erroutput=$(rpm --quiet -e --nodeps $mariadb_rpm 2>&1); then
+      echo "- MariaDB packages erased" | tee -a $LOG
+    else
+      echo -e "${RED}$erroutput ${NC}" | tee -a $LOG
+    fi
+  fi
 
   echo "- Updating and installing packages"
-  yum -y -q update MariaDB-*
-  yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
+  if erroutput=$(yum -y -q update MariaDB-* 2>&1); then
+    echo "- MariaDB packages updated" | tee -a $LOG
+  else
+    echo -e "${RED}Failed to update MariaDB packages:" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
+
+  if erroutput=$(yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server 2>&1); then
+    echo "- MariaDB-server $MDB_VER successfully installed" | tee -a $LOG
+  else
+    echo -e "${RED}Failed to installed MariaDB $MDB_VER" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
 
   echo "- Starting MariaDB $MDB_VER"
   if [ "$MDB_VER" = "10.0" ]; then
@@ -76,7 +134,13 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   fi
 
   echo "- Running mysql_upgrade"
-  MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
+  if erroutput=$(mysql_upgrade -u admin -p$(cat /etc/psa/.psa.shadow) 2>&1); then
+    echo "- MySQL/MariaDB upgrade to $MDB_VER was Successful" | tee -a $LOG
+  else
+    echo -e "${RED}Failed to upgrade to MySQL/MariaDB $MDB_VER" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
 }
 
 MySQL_VERS_INFO=$(mysql --version)
@@ -98,18 +162,44 @@ case $MySQL_VERS_INFO in
   ;;
 
 *"Distrib 5.6."*)
-  echo "MySQL or Percona 5.6 detected. Proceeding with 5.6 -> 10.0 -> 10.5"
+  echo "MySQL or Percona 5.6 detected. Proceeding with 5.6 -> 10.0 -> 10.5" | tee -a $LOG
   # shellcheck disable=SC2143
   if [[ $(rpm -qa | grep Percona-Server-server) ]]; then
     # Removing Percona server and disabling repo
-    rpm -e --nodeps Percona-Server-server-56
-    rpm -e --nodeps Percona-Server-shared-56
-    rpm -e --nodeps Percona-Server-client-56
-    rpm -e --nodeps Percona-Server-shared-51
+    if erroutput=$(rpm -e --nodeps Percona-Server-server-56 2>&1); then
+      echo "- Percona-Package erased" | tee -a $LOG
+    else
+      echo -e "${RED}Failed to erase Percona-Package" | tee -a $LOG
+      echo -e "$erroutput ${NC}" | tee -a $LOG
+    fi
+    if erroutput=$(rpm -e --nodeps Percona-Server-shared-56 2>&1); then
+      echo "- Percona-Package erased" | tee -a $LOG
+    else
+      echo -e "${RED}Failed to erase Percona-Package" | tee -a $LOG
+      echo -e "$erroutput ${NC}" | tee -a $LOG
+    fi
+    if erroutput=$(rpm -e --nodeps Percona-Server-client-56 2>&1); then
+      echo "- Percona-Package erased" | tee -a $LOG
+    else
+      echo -e "${RED}Failed to erase Percona-Package" | tee -a $LOG
+      echo -e "$erroutput ${NC}" | tee -a $LOG
+    fi
+    if erroutput=$(rpm -e --nodeps Percona-Server-shared-51 2>&1); then
+      echo "- Percona-Package erased" | tee -a $LOG
+    else
+      echo -e "${RED}Failed to erase Percona-Package" | tee -a $LOG
+      echo -e "$erroutput ${NC}" | tee -a $LOG
+    fi
     sed -i 's/^enabled = 1/enabled = 0/' /etc/yum.repos.d/percona-original-release.repo
   else
     # Removing MySQL 5.6 server
-    rpm -e --nodeps mysql-server
+    if erroutput=$(rpm -e --nodeps mysql-server 2>&1); then
+      echo "- removed mysql-server 5.6" | tee -a $LOG
+    else
+      echo -e "${RED}Failed to removed MySQL-server 5.6" | tee -a $LOG
+      echo -e "$erroutput ${NC}" | tee -a $LOG
+      exit 1
+    fi
   fi
 
   mv -f /etc/my.cnf /etc/my.cnf.bak
@@ -121,7 +211,7 @@ case $MySQL_VERS_INFO in
   ;;
 
 *"Distrib 10.0"*)
-  echo "MariaDB 10.0 detected. Proceeding with upgrade to 10.5"
+  echo "MariaDB 10.0 detected. Proceeding with upgrade to 10.5" | tee -a $LOG
   mv -f /etc/my.cnf /etc/my.cnf.bak
   do_mariadb_upgrade '10.1'
   do_mariadb_upgrade '10.2'
@@ -129,32 +219,32 @@ case $MySQL_VERS_INFO in
   ;;
 
 *"Distrib 10.1"*)
-  echo "MariaDB 10.1 detected. Proceeding with upgrade to 10.5"
+  echo "MariaDB 10.1 detected. Proceeding with upgrade to 10.5" | tee -a $LOG
   do_mariadb_upgrade '10.2'
   do_mariadb_upgrade '10.5'
   ;;
 
 *"Distrib 10.2"*)
-  echo "MariaDB 10.2 detected. Proceeding with upgrade to 10.5"
+  echo "MariaDB 10.2 detected. Proceeding with upgrade to 10.5" | tee -a $LOG
   do_mariadb_upgrade '10.5'
   ;;
 
 *"Distrib 10.3"*)
-  echo "MariaDB 10.3 detected. Proceeding with upgrade to 10.5"
+  echo "MariaDB 10.3 detected. Proceeding with upgrade to 10.5" | tee -a $LOG
   do_mariadb_upgrade '10.5'
   ;;
 *"Distrib 10.4"*)
-  echo "MariaDB 10.4 detected. Proceeding with upgrade to 10.5"
+  echo "MariaDB 10.4 detected. Proceeding with upgrade to 10.5" | tee -a $LOG
   do_mariadb_upgrade '10.5'
   ;;
 
 *"Distrib 10.5"*)
-  echo "Already at 10.5. Exiting."
+  echo "Already at 10.5. Exiting." | tee -a $LOG
   exit 1
   ;;
 
 *)
-  echo "Error. Unknown initial MySQL version. Aborting."
+  echo "Error. Unknown initial MySQL version. Aborting." | tee -a $LOG
   exit 1
   ;;
 esac
@@ -180,16 +270,16 @@ fi
 # Link /var/log/mysqld.log to mariadb log file location
 ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
-echo "Ensuring systemd doesn't mix up mysql and mariadb"
-systemctl stop mysql
-systemctl stop mariadb
-chkconfig --del mysql
-systemctl disable mysql
-systemctl disable mariadb
-systemctl enable mariadb.service
-systemctl start mariadb.service
+echo "Ensuring systemd doesn't mix up mysql and mariadb" | tee -a $LOG
+systemctl stop mysql > /dev/null 2>&1
+systemctl stop mariadb > /dev/null 2>&1
+chkconfig --del mysql > /dev/null 2>&1
+systemctl disable mysql > /dev/null 2>&1
+systemctl disable mariadb > /dev/null 2>&1
+systemctl enable mariadb.service > /dev/null 2>&1
+systemctl start mariadb.service > /dev/null 2>&1
 
-echo "Fixing Plesk bug MDEV-27834"
+echo "Fixing Plesk bug MDEV-27834" | tee -a $LOG
 # BUGFIX MDEV-27834: https://support.plesk.com/hc/en-us/articles/4419625529362-Plesk-Installer-fails-when-MariaDB-10-5-or-10-6-is-installed
 
 mdb_ver=$(rpm -q MariaDB-shared | awk -F- '{print $3}')
@@ -197,19 +287,37 @@ mdb_ver=$(rpm -q MariaDB-shared | awk -F- '{print $3}')
 if echo "$mdb_ver" | grep -q 10.3.34; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.3/rhel8-amd64/rpms/MariaDB-shared-10.3.32-1.el8.x86_64.rpm
-  yum -y -q downgrade MariaDB-shared-10.3.32
+  if erroutput=$(yum -y -q downgrade MariaDB-shared-10.3.32 2>&1); then
+    echo "- Bug fix: downgrade successful" | tee -a $LOG
+  else
+    echo -e "${RED}Bug fix: downgrade failed" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
   echo "exclude=MariaDB-shared-10.3.34" >>/etc/yum.repos.d/mariadb.repo
 
 elif echo "$mdb_ver" | grep -q 10.4.24; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.4/rhel8-amd64/rpms/MariaDB-shared-10.4.22-1.el8.x86_64.rpm
-  yum -y -q downgrade MariaDB-shared-10.4.22
+  if erroutput=$(yum -y -q downgrade MariaDB-shared-10.4.22 2>&1); then
+    echo "- Bug fix: downgrade successful" | tee -a $LOG
+  else
+    echo -e "${RED}Bug fix: downgrade failed" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
   echo "exclude=MariaDB-shared-10.4.24" >>/etc/yum.repos.d/mariadb.repo
 
 elif echo "$mdb_ver" | grep -q 10.5.15; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.5/rhel8-amd64/rpms/MariaDB-shared-10.5.13-1.el8.x86_64.rpm
-  yum -y -q downgrade MariaDB-shared-10.5.13
+  if erroutput=$(yum -y -q downgrade MariaDB-shared-10.5.13 2>&1); then
+    echo "- Bug fix: downgrade successful" | tee -a $LOG
+  else
+    echo -e "${RED}Bug fix: downgrade failed" | tee -a $LOG
+    echo -e "$erroutput ${NC}" | tee -a $LOG
+    exit 1
+  fi
   echo "exclude=MariaDB-shared-10.5.15" >>/etc/yum.repos.d/mariadb.repo
 
 fi
@@ -218,9 +326,14 @@ fi
 
 # END BUGFIX
 
-echo "Informing Plesk of Changes"
+echo "Informing Plesk of Changes" | tee -a $LOG
 #plesk bin service_node --update local
-plesk sbin packagemng -sdf
+if erroutput=$(plesk sbin packagemng -sdf 2>&1); then
+  echo "- Plesk informed of changes" | tee -a $LOG
+else
+  echo -e "${RED}Failed to inform plesk of the changes" | tee -a $LOG
+  echo -e "$erroutput ${NC}" | tee -a $LOG
+fi
 restorecon -v /var/lib/mysql/*
 
 systemctl restart sw-cp-server
