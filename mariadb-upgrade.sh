@@ -2,7 +2,7 @@
 
 RED='\033[0;31m'
 NC='\033[0m' # No Color
-LOG="/var/log/mairadb-upgrade.log"
+LOG="/var/log/mariadb-upgrade.log"
 
 echo "Beginning upgrade procedure." | tee $LOG
 
