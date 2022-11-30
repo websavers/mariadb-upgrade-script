@@ -94,10 +94,17 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
       echo -e "${RED}$erroutput ${NC}"
     fi
   fi
-  if erroutput=$(rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server 2>&1); then
-    echo "MariaDB packages erased"
-  else
-    echo -e "${RED}$erroutput ${NC}"
+  for i in "mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server"; do
+    if rpm -qa | grep "$i" > /dev/null 2>&1; then
+      mariadb_rpm="$mariadb_rpm $i"
+    fi
+  done
+  if [ ! -z $mariadb_rpm ]; then
+    if erroutput=$(rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server 2>&1); then
+      echo "MariaDB packages erased"
+    else
+      echo -e "${RED}$erroutput ${NC}"
+    fi
   fi
 
   echo "- Updating and installing packages"
