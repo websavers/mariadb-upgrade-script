@@ -95,7 +95,12 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   fi
 
   echo "- Updating and installing packages"
-  yum -y -q update MariaDB-*
+  if erroutput=$(yum -y -q update MariaDB-* 2>&1); then
+    echo "MariaDB packages updated"  
+  else
+    echo -e "${RED}Failed to update MariaDB packages:"
+    echo -e "$erroutput ${NC}"
+  fi
   yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server
 
   echo "- Starting MariaDB $MDB_VER"
