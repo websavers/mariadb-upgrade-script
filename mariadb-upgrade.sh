@@ -270,13 +270,13 @@ fi
 ln -s /var/lib/mysql/mysqld.log /var/log/mysqld.log
 
 echo "Ensuring systemd doesn't mix up mysql and mariadb"
-systemctl stop mysql
-systemctl stop mariadb
-chkconfig --del mysql
-systemctl disable mysql
-systemctl disable mariadb
-systemctl enable mariadb.service
-systemctl start mariadb.service
+systemctl stop mysql > /dev/null 2>&1
+systemctl stop mariadb > /dev/null 2>&1
+chkconfig --del mysql > /dev/null 2>&1
+systemctl disable mysql > /dev/null 2>&1
+systemctl disable mariadb > /dev/null 2>&1
+systemctl enable mariadb.service > /dev/null 2>&1
+systemctl start mariadb.service > /dev/null 2>&1
 
 echo "Fixing Plesk bug MDEV-27834"
 # BUGFIX MDEV-27834: https://support.plesk.com/hc/en-us/articles/4419625529362-Plesk-Installer-fails-when-MariaDB-10-5-or-10-6-is-installed
