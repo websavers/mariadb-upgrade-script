@@ -112,7 +112,7 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   if erroutput=$(yum -y -q install MariaDB-server MariaDB MariaDB-gssapi-server 2>&1); then
     echo "MariaDB-server $MDB_VER successfully installed"
   else
-    echo -e "${RED}Failed to installed MariaDB $MDB_VERw"
+    echo -e "${RED}Failed to installed MariaDB $MDB_VER"
     echo -e "$erroutput ${NC}"
     exit 1
   fi
@@ -125,7 +125,13 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   fi
 
   echo "- Running mysql_upgrade"
-  MYSQL_PWD=$(cat /etc/psa/.psa.shadow) mysql_upgrade -uadmin
+  if erroutput=$(mysql_upgrade -u admin -p$(cat /etc/psa/.psa.shadow) 2>&1); then
+    echo "MySQL/MariaDB upgrade to $MDB_VER was Successful"
+  else
+    echo -e "${RED}Failed to upgrade to MySQL/MariaDB $MDB_VER"
+    echo -e "$erroutput ${NC}"
+    exit 1
+  fi
 }
 
 MySQL_VERS_INFO=$(mysql --version)
