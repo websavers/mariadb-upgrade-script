@@ -299,7 +299,12 @@ fi
 
 echo "Informing Plesk of Changes"
 #plesk bin service_node --update local
-plesk sbin packagemng -sdf
+if erroutput=$(plesk sbin packagemng -sdf 2>&1); then
+  echo "Plesk informed of changes"
+else
+  echo -e "${RED}Failed to inform plesk of the changes"
+  echo -e "$erroutput ${NC}"
+fi
 restorecon -v /var/lib/mysql/*
 
 systemctl restart sw-cp-server
