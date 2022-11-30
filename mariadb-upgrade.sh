@@ -71,6 +71,7 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   else
     echo -e "${RED}Failed to clear mariadb repo cache"
     echo -e "$erroutput ${NC}"
+    exit 1
   fi
   echo "- Stopping current db server"
   if systemctl | grep -i "mariadb.service"; then
