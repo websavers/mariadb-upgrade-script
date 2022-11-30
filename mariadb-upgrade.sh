@@ -258,19 +258,37 @@ mdb_ver=$(rpm -q MariaDB-shared | awk -F- '{print $3}')
 if echo "$mdb_ver" | grep -q 10.3.34; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.3/rhel8-amd64/rpms/MariaDB-shared-10.3.32-1.el8.x86_64.rpm
-  yum -y -q downgrade MariaDB-shared-10.3.32
+  if erroutput=$(yum -y -q downgrade MariaDB-shared-10.3.32 2>&1); then
+    echo "Bug fix: downgrade successful"
+  else
+    echo -e "${RED}Bug fix: downgrade failed"
+    echo -e "$erroutput ${NC}"
+    exit 1
+  fi
   echo "exclude=MariaDB-shared-10.3.34" >>/etc/yum.repos.d/mariadb.repo
 
 elif echo "$mdb_ver" | grep -q 10.4.24; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.4/rhel8-amd64/rpms/MariaDB-shared-10.4.22-1.el8.x86_64.rpm
-  yum -y -q downgrade MariaDB-shared-10.4.22
+  if erroutput=$(yum -y -q downgrade MariaDB-shared-10.4.22 2>&1); then
+    echo "Bug fix: downgrade successful"
+  else
+    echo -e "${RED}Bug fix: downgrade failed"
+    echo -e "$erroutput ${NC}"
+    exit 1
+  fi
   echo "exclude=MariaDB-shared-10.4.24" >>/etc/yum.repos.d/mariadb.repo
 
 elif echo "$mdb_ver" | grep -q 10.5.15; then
 
   #rpm -Uhv --oldpackage --justdb http://yum.mariadb.org/10.5/rhel8-amd64/rpms/MariaDB-shared-10.5.13-1.el8.x86_64.rpm
-  yum -y -q downgrade MariaDB-shared-10.5.13
+  if erroutput=$(yum -y -q downgrade MariaDB-shared-10.5.13 2>&1); then
+    echo "Bug fix: downgrade successful"
+  else
+    echo -e "${RED}Bug fix: downgrade failed"
+    echo -e "$erroutput ${NC}"
+    exit 1
+  fi
   echo "exclude=MariaDB-shared-10.5.15" >>/etc/yum.repos.d/mariadb.repo
 
 fi
