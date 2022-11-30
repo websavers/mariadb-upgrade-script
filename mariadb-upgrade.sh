@@ -94,8 +94,9 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
       echo -e "${RED}$erroutput ${NC}"
     fi
   fi
+  installed_packages=$(rpm -qa)
   for i in "mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server"; do
-    if rpm -qa | grep "$i" > /dev/null 2>&1; then
+    if echo "$installed_packages" | grep "$i" > /dev/null 2>&1; then
       mariadb_rpm="$mariadb_rpm $i"
     fi
   done
