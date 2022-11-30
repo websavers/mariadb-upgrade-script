@@ -157,10 +157,30 @@ case $MySQL_VERS_INFO in
   # shellcheck disable=SC2143
   if [[ $(rpm -qa | grep Percona-Server-server) ]]; then
     # Removing Percona server and disabling repo
-    rpm -e --nodeps Percona-Server-server-56
-    rpm -e --nodeps Percona-Server-shared-56
-    rpm -e --nodeps Percona-Server-client-56
-    rpm -e --nodeps Percona-Server-shared-51
+    if erroutput=$(rpm -e --nodeps Percona-Server-server-56 2>&1); then
+      echo "Percona-Package erased"
+    else
+      echo -e "${RED}Failed to erase Percona-Package"
+      echo -e "$erroutput ${NC}"
+    fi
+    if erroutput=$(rpm -e --nodeps Percona-Server-shared-56 2>&1); then
+      echo "Percona-Package erased"
+    else
+      echo -e "${RED}Failed to erase Percona-Package"
+      echo -e "$erroutput ${NC}"
+    fi
+    if erroutput=$(rpm -e --nodeps Percona-Server-client-56 2>&1); then
+      echo "Percona-Package erased"
+    else
+      echo -e "${RED}Failed to erase Percona-Package"
+      echo -e "$erroutput ${NC}"
+    fi
+    if erroutput=$(rpm -e --nodeps Percona-Server-shared-51 2>&1); then
+      echo "Percona-Package erased"
+    else
+      echo -e "${RED}Failed to erase Percona-Package"
+      echo -e "$erroutput ${NC}"
+    fi
     sed -i 's/^enabled = 1/enabled = 0/' /etc/yum.repos.d/percona-original-release.repo
   else
     # Removing MySQL 5.6 server
