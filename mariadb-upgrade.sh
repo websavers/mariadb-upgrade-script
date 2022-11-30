@@ -164,7 +164,13 @@ case $MySQL_VERS_INFO in
     sed -i 's/^enabled = 1/enabled = 0/' /etc/yum.repos.d/percona-original-release.repo
   else
     # Removing MySQL 5.6 server
-    rpm -e --nodeps mysql-server
+    if erroutput=$(rpm -e --nodeps mysql-server 2>&1); then
+      echo "removed mysql-server 5.6"
+    else
+      echo -e "${RED}Failed to removed MySQL-server 5.6"
+      echo -e "$erroutput ${NC}"
+      exit 1
+    fi
   fi
 
   mv -f /etc/my.cnf /etc/my.cnf.bak
