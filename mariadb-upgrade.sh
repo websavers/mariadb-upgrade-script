@@ -85,13 +85,11 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
     echo "MariaDB-server package erased"
   else
     echo -e "${RED} $erroutput ${NC}"
-    exit 1
   fi
   if erroutput=$(rpm --quiet -e --nodeps mariadb-server 2>&1); then
     echo "MariaDB-server package erased"
   else
     echo -e "${RED} $erroutput ${NC}"
-    exit 1
   fi
   if erroutput=$(rpm --quiet -e --nodeps mysql-common mysql-libs mysql-devel mariadb-backup mariadb-gssapi-server 2>&1); then
     echo "MariaDB packages erased"
