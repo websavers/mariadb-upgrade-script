@@ -12,7 +12,7 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]; then
   if erroutput=$(mysqldump -u admin -p$(cat /etc/psa/.psa.shadow) --all-databases --routines --triggers --max_allowed_packet=1G | gzip >/root/all_databases_pre_maria_upgrade.sql.gz 2>&1); then
     echo "Backups successfully created"
   else
-    echo -e "${RED} Error:"
+    echo -e "${RED}Error:"
     echo -e "$erroutput ${NC}"
     exit 1
   fi
@@ -66,7 +66,12 @@ gpgcheck=1" >/etc/yum.repos.d/mariadb.repo
   fi
 
   echo "- Clearing mariadb repo cache"
-  yum clean all --disablerepo="*" --enablerepo=mariadb
+  if erroutput=$(yum clean all --disablerepo="*" --enablerepo=mariadb 2>&1); then
+    echo "mariadb repo cache cleared"
+  else
+    echo -e "${RED}Failed to clear mariadb repo cache"
+    echo -e "$erroutput ${NC}"
+  fi
   echo "- Stopping current db server"
   systemctl stop mariadb || systemctl stop mysql
 
