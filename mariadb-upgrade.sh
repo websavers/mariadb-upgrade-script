@@ -4,12 +4,12 @@ RED='\033[0;31m'
 NC='\033[0m' # No Color
 LOG="/var/log/mairadb-upgrade.log"
 
-echo "Beginning upgrade procedure."
+echo "Beginning upgrade procedure." | tee $LOG
 
 read -p "Do you wish to back up all existing databases? (y/n) " -n 1 -r
 echo # new line
 if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-  echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... This may take 5 minutes or so depending on size of databases."
+  echo "Proceeding with backup to /root/all_databases_pre_maria_upgrade.sql.gz ... This may take 5 minutes or so depending on size of databases."  | tee $LOG
   if erroutput=$(mysqldump -u admin -p$(cat /etc/psa/.psa.shadow) --all-databases --routines --triggers --max_allowed_packet=1G | gzip >/root/all_databases_pre_maria_upgrade.sql.gz 2>&1); then
     echo "- Backups successfully created" | tee $LOG
   else
@@ -18,7 +18,7 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     exit 1
   fi
 else
-  echo "A risk taker, I see. Carrying on with upgrade procedures without backup..."
+  echo "A risk taker, I see. Carrying on with upgrade procedures without backup..." | tee $LOG
 fi
 
 read -p "Are you sure you wish to proceed with the upgrade to MariaDB 10.5? (y/n) " -n 1 -r
